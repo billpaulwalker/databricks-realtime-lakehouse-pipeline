@@ -1,0 +1,16 @@
+bundle:
+  name: realtime_telematics_pipeline
+
+resources:
+  jobs:
+    realtime_telematics_pipeline_job:
+      name: realtime-telematics-pipeline-job
+      tasks:
+        - task_key: run_pipeline
+          spark_python_task:
+            python_file: src/jobs/run_pipeline.py
+          existing_cluster_id: ${var.existing_cluster_id}
+
+variables:
+  existing_cluster_id:
+    description: Existing Databricks cluster ID
