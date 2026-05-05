@@ -6,12 +6,12 @@ In production, move environment-specific values to Databricks job parameters,
 secrets, or bundle variables.
 """
 
-CATALOG = "main"
-SCHEMA = "telematics_demo"
+CATALOG = "telematics"
+SCHEMA = "demo"
 
-RAW_EVENTS_PATH = "/Volumes/main/telematics_demo/raw/events"
-BRONZE_CHECKPOINT_PATH = "/Volumes/main/telematics_demo/checkpoints/bronze_events"
-SILVER_CHECKPOINT_PATH = "/Volumes/main/telematics_demo/checkpoints/silver_events"
+RAW_EVENTS_PATH = "/Volumes/telematics/demo/raw/events"
+BRONZE_CHECKPOINT_PATH = "/Volumes/telematics/demo/checkpoints/bronze_events"
+SILVER_CHECKPOINT_PATH = "/Volumes/telematics/demo/checkpoints/silver_events"
 
 BRONZE_TABLE = f"{CATALOG}.{SCHEMA}.bronze_telematics_events"
 SILVER_TABLE = f"{CATALOG}.{SCHEMA}.silver_telematics_events"

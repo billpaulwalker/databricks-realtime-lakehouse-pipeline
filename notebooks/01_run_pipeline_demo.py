@@ -24,7 +24,7 @@ main()
 
 # MAGIC %sql
 # MAGIC SELECT *
-# MAGIC FROM main.telematics_demo.gold_vehicle_activity_by_day
+# MAGIC FROM telematics_demo.gold_vehicle_activity_by_day
 # MAGIC ORDER BY event_date DESC, vehicle_id
 # MAGIC LIMIT 100;
 
@@ -32,6 +32,6 @@ main()
 
 # MAGIC %sql
 # MAGIC SELECT *
-# MAGIC FROM main.telematics_demo.gold_driver_behavior_by_day
+# MAGIC FROM telematics_demo.gold_driver_behavior_by_day
 # MAGIC ORDER BY event_date DESC, driver_id
 # MAGIC LIMIT 100;
