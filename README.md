@@ -2,13 +2,25 @@
 
 ## Overview
 
-This project demonstrates a production-style, end-to-end real-time data pipeline using Databricks, PySpark, Structured Streaming, and Delta Lake.
+This project demonstrates a production-style, end-to-end real-time data pipeline using Databricks, PySpark Structured Streaming, Delta Lake, and Unity Catalog.
 
-The pipeline processes simulated telematics event data such as GPS location, vehicle speed, driver behavior, and trip activity. It follows a medallion architecture pattern: bronze, silver, and gold.
+The pipeline processes simulated telematics event data such as GPS location, vehicle speed, driver behavior, and trip activity. It follows a medallion architecture (bronze, silver, gold) and implements modern ingestion and transformation patterns used in real-world data platforms.
 
-The goal of this project is to demonstrate how modern data platforms ingest, transform, validate, and serve high-volume event data for analytics.
+The goal of this project is to showcase how modern data engineering systems ingest, transform, validate, and serve high-volume event data for analytics in a scalable and reliable way.
 
 ---
+
+## What This Demonstrates
+
+- Production-grade ingestion using Databricks Auto Loader (cloudFiles)
+- Medallion architecture: bronze → silver → gold
+- Unity Catalog with external volumes and governed storage
+- Incremental processing with Structured Streaming
+- Idempotent transformations using foreachBatch + Delta MERGE
+- Data quality validation and deduplication
+- Handling of late-arriving and out-of-order data
+- Analytics-ready gold layer for reporting and BI
+- Git-based development workflow
 
 ## Problem Statement
 
@@ -23,23 +35,23 @@ Common challenges include:
 - Need for near real-time analytics
 - Reliable downstream reporting
 
-This project solves those challenges using Spark Structured Streaming and Delta Lake.
+This project addresses these challenges using Auto Loader, Delta Lake, and Structured Streaming.
 
 ---
 
 ## Architecture
 
 
-Simulated Event Source
+JSON Files (External Volume)
         |
         v
-Bronze Layer - Raw Events
+Bronze Layer - Auto Loader Incremental Ingestion
         |
         v
-Silver Layer - Cleaned and Deduplicated Events
+Silver Layer - foreachBatch + Cleaned and Deduplicated Events + Delta MERGE
         |
         v
-Gold Layer - Aggregated Analytics
+Gold Layer - Aggregated Analytics Tables
         |
         v
 BI / SQL / Dashboard Layer
@@ -52,35 +64,49 @@ BI / SQL / Dashboard Layer
 - PySpark
 - Spark Structured Streaming
 - Delta Lake
+- Unity Catalog
 - SQL
-- Git
+- Git / GitHub
+
+## Pipeline Flow
+
+1. Raw JSON telematics files land in a Unity Catalog external volume
+2. Bronze layer ingests data incrementally using Auto Loader
+3. Silver layer:
+- Cleans and standardizes data
+- Applies data quality rules
+- Deduplicates using event_id
+- Uses foreachBatch + Delta MERGE for idempotent processing
+4. Gold layer builds aggregated, analytics-ready tables
+5. Data is served via Databricks SQL or BI tools
 
 ## Pipeline Layers
 
-### Bronze Layer
+### Bronze Layer (Auto Loader)
 
-The bronze layer stores raw incoming events in Delta format.
+The bronze layer ingests raw data using Databricks Auto Loader.
 
 Responsibilities:
 
-Ingest raw event data
-Preserve original structure
-Support schema evolution
-Store append-only event history
+- Incrementally ingest new files from cloud storage
+- Preserve original event structure
+- Capture ingestion metadata
+- Support schema evolution
+- Maintain append-only history
 
-### Silver Layer
+### Silver Layer (foreachBatch + MERGE)
 
 The silver layer cleans and standardizes the data.
 
 Responsibilities:
 
-Remove duplicates
-Validate required fields
-Standardize timestamps
-Handle late-arriving events
-Prepare data for analytics
+- Standardize timestamps
+- Apply data quality validation
+- Remove duplicates using event_id
+- Handle late-arriving data
+- Use Delta MERGE for idempotent writes
 
-### Gold Layer
+### Gold Layer (Analytics)
 
 The gold layer contains business-ready aggregated data.
 
@@ -93,43 +119,32 @@ Optimize for reporting and dashboards
 
 ## Key Features
 
+- Auto Loader for scalable file ingestion
 - Medallion architecture design
-- Streaming ingestion with PySpark
-- Delta Lake storage format
-- Incremental processing
-- Checkpointing for fault tolerance
-- Data quality validation
-- Deduplication logic
-- Performance optimization patterns
+- Incremental processing with checkpointing
+- Data quality enforcement
+- Deduplication using business keys
+- Idempotent processing with foreachBatch
+- Delta Lake ACID guarantees
+- Unity Catalog governance
 
 ## Example PySpark Streaming Pattern
 
 raw_events_df = (
-    spark.readStream
-    .format("json")
-    .schema(event_schema)
-    .load("/mnt/raw/telematics/events")
-)
-
-(
-    raw_events_df.writeStream
-    .format("delta")
-    .outputMode("append")
-    .option("checkpointLocation", "/mnt/checkpoints/bronze_events")
-    .table("bronze_telematics_events")
+        spark.readStream
+        .format("cloudFiles")
+        .option("cloudFiles.format", "json")
+        .option("cloudFiles.schemaLocation", schema_path)
+        .load(raw_path)
 )
 
 ## Example Transformation Pattern
 
-from pyspark.sql.functions import col, to_timestamp
-
-silver_df = (
-    bronze_df
-    .withColumn("event_timestamp", to_timestamp(col("event_time")))
-    .filter(col("vehicle_id").isNotNull())
-    .filter(col("event_timestamp").isNotNull())
-    .dropDuplicates(["event_id"])
-)
+def upsert_silver_batch(batch_df, batch_id):
+        silver_table.alias("target").merge(
+                batch_df.alias("source"),
+                "target.event_id = source.event_id"
+        ).whenNotMatchedInsertAll().execute()
 
 ## Data Quality Checks
 
@@ -140,6 +155,40 @@ Example validation rules:
 - event_timestamp must be valid
 - duplicate events should be removed
 - speed values should be within expected range
+
+## Setup
+
+Unity Catalog Objects
+
+Create:
+- Catalog: telematics
+- Schema: demo
+- Volumes: raw and checkpoints
+
+Expected Paths
+
+/Volumes/telematics/demo/raw/events
+/Volumes/telematics/demo/checkpoints/bronze_events
+/Volumes/telematics/demo/checkpoints/bronze_events_schema
+/Volumes/telematics/demo/checkpoints/silver_events
+
+## Run the Pipeline
+
+import sys repo_root = "/Workspace/Users/<your-email>/databricks-realtime-lakehouse-pipeline"
+
+if repo_root not in sys.path:
+        sys.path.append(repo_root)
+
+from src.jobs.run_pipeline import main main()
+
+main()
+
+## Validate Results
+
+SELECT COUNT(*) FROM telematics.demo.bronze_telematics_events;
+SELECT COUNT(*) FROM telematics.demo.silver_telematics_events;
+SELECT * FROM telematics.demo.gold_vehicle_activity_by_day;
+SELECT * FROM telematics.demo.gold_driver_behavior_by_day;
 
 ## Performance Considerations
 
@@ -155,11 +204,11 @@ This project applies common lakehouse performance patterns:
 ## Design Tradeoffs
 
 Decision	                Benefit	                                                Tradeoff
-Structured Streaming	    Near real-time processing	                            More operational complexity
+Auto Loader                     Incremental, scalable ingestion                         Slight setup complexity
 Delta Lake	                ACID transactions and schema evolution	                Slight overhead compared to raw Parquet
-Medallion architecture	    Clear separation of raw, cleaned, and business data	    More layers to manage
-Deduplication in silver	    Improves data quality	                                Requires reliable event keys
-Partitioning by date	    Better query performance	                            Poor partition choices can cause small files
+Medallion architecture	        Clear separation of raw, cleaned, and business data	More layers to manage
+foreachBatch + MERGE	        Idempotent processing                                   More complex logic
+External volumes                Governed storage                                        requires cloud setup
 
 ## Future Enhancements
 

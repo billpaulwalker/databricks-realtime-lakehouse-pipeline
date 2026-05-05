@@ -7,12 +7,17 @@ from src.gold.build_gold import build_all_gold_tables
 
 
 def create_database_if_needed(spark: SparkSession):
-    spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+    """
+    The Unity Catalog catalog should already exist and be configured
+    with a managed location or external storage.
+
+    This pipeline only creates the schema if needed.
+    """
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
 
 
 def main():
-    spark = SparkSession.builder.appName("realtime-telematics-pipeline").getOrCreate()
+    spark = SparkSession.builder.appName("databricks-realtime-lakehouse-pipeline").getOrCreate()
 
     create_database_if_needed(spark)
 
