@@ -10,7 +10,7 @@
 # If needed, adjust sys.path to include the repo root.
 
 import sys
-repo_root = "/Workspace/Repos/<your-user-or-team>/realtime_telematics_databricks_pipeline"
+repo_root = "/Workspace/Users/billpaulwalker@gmail.com/databricks-realtime-lakehouse-pipeline"
 if repo_root not in sys.path:
     sys.path.append(repo_root)
 
