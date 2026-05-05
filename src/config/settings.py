@@ -11,6 +11,7 @@ SCHEMA = "demo"
 
 RAW_EVENTS_PATH = "/Volumes/telematics/demo/raw/events"
 BRONZE_CHECKPOINT_PATH = "/Volumes/telematics/demo/checkpoints/bronze_events"
+AUTOLOADER_SCHEMA_LOCATION = "/Volumes/telematics/demo/checkpoints/bronze_events_schema"
 SILVER_CHECKPOINT_PATH = "/Volumes/telematics/demo/checkpoints/silver_events"
 
 BRONZE_TABLE = f"{CATALOG}.{SCHEMA}.bronze_telematics_events"
