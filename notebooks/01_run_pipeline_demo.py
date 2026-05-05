@@ -10,7 +10,7 @@
 # If needed, adjust sys.path to include the repo root.
 
 import sys
-repo_root = "/Workspace/Users/billpaulwalker@gmail.com/databricks-realtime-lakehouse-pipeline"
+repo_root = "/Workspace/Users/william.walker@yahoo.com/databricks-realtime-lakehouse-pipeline"
 if repo_root not in sys.path:
     sys.path.append(repo_root)
 
@@ -24,7 +24,7 @@ main()
 
 # MAGIC %sql
 # MAGIC SELECT *
-# MAGIC FROM telematics_demo.gold_vehicle_activity_by_day
+# MAGIC FROM telematics.demo.gold_vehicle_activity_by_day
 # MAGIC ORDER BY event_date DESC, vehicle_id
 # MAGIC LIMIT 100;
 
@@ -32,6 +32,6 @@ main()
 
 # MAGIC %sql
 # MAGIC SELECT *
-# MAGIC FROM telematics_demo.gold_driver_behavior_by_day
+# MAGIC FROM telematics.demo.gold_driver_behavior_by_day
 # MAGIC ORDER BY event_date DESC, driver_id
 # MAGIC LIMIT 100;
